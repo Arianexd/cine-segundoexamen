@@ -18,11 +18,11 @@ services:
       timeout: 5s
       retries: 5
 
-  api:
+api:
     build: ./backend
     container_name: cine_api
     environment:
-      - DATABASE_URL=postgresql://postgres:admin123@db:5432/cinedb
+      - DATABASE_URL=postgresql+psycopg2://postgres:admin123@db:5432/cinedb
     depends_on:
       db:
         condition: service_healthy
