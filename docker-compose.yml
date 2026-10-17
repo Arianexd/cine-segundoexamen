@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # 1. LA BASE DE DATOS (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    container_name: cine_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: cinedb
+    ports:
+      - "5432:5432"
+    networks:
+      - cine_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. TU MICROSERVICIO (FastAPI)
+  api:
+    build: ./backend
+    container_name: cine_api
+    depends_on:
+      db:
+        condition: service_healthy  # Espera a que la BD esté lista (Pide la rúbrica)
+    ports:
+      - "8000:8000"
+    networks:
+      - cine_network
+
+  # 3. EL API GATEWAY (Nginx)
+  gateway:
+    build: ./gateway
+    container_name: cine_gateway
+    ports:
+      - "80:80"
+    depends_on:
+      - api  # Espera a que FastAPI arranque
+    networks:
+      - cine_network
+
+# Red compartida (Pide la rúbrica)
+networks:
+  cine_network:
+    driver: bridge
